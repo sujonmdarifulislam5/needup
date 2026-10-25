@@ -64,7 +64,12 @@ function Chat() {
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: "end" });
-    if (!user || !msgs.data?.some((m) => m.sender_id !== user.id && !m.is_read)) return;
+    if (!user || !msgs.data) return;
+    // Clear this chat's message alerts from the bell too.
+    void supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("conversation_id", id).eq("is_read", false)
+      .then(() => { void qc.invalidateQueries({ queryKey: ["notif-unread"] }); void qc.invalidateQueries({ queryKey: ["notifications"] }); });
+    if (!msgs.data.some((m) => m.sender_id !== user.id && !m.is_read)) return;
+    qc.setQueryData<{ id: string; unread: number }[]>(["conversations", user.id], (old) => old?.map((c) => (c.id === id ? { ...c, unread: 0 } : c)));
     void supabase.from("messages").update({ is_read: true }).eq("conversation_id", id).neq("sender_id", user.id).eq("is_read", false)
       .then(() => qc.invalidateQueries({ queryKey: ["conversations"] }));
   }, [msgs.data, id, user, qc]);

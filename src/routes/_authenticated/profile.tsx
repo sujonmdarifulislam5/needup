@@ -1,3 +1,4 @@
+import { languages, useT } from "@/lib/i18n";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LogOut, MapPin, Pencil, X } from "lucide-react";
 import { useState } from "react";
@@ -32,6 +33,7 @@ function Profile() {
   const nav = useNavigate();
   const [t, setT] = useState<DbPostType | "all">("all");
   const [edit, setEdit] = useState(false);
+  const { t: tr, lang, setLang } = useT();
   const stats = useQuery({
     queryKey: ["profile-stats", user?.id],
     enabled: !!user,
@@ -63,7 +65,7 @@ function Profile() {
           <div className="-mt-12 flex items-end justify-between gap-3">
             <span className="rounded-full border-4 border-card"><UserAvatar src={profile.avatar_url} name={profile.full_name} className="h-24 w-24 text-2xl" /></span>
             <div className="flex gap-2">
-              <button onClick={() => setEdit(true)} className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><Pencil className="h-4 w-4" /> Edit Profile</button>
+              <button onClick={() => setEdit(true)} className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><Pencil className="h-4 w-4" /> {tr("editProfile")}</button>
               <button onClick={async () => { await signOut(); nav({ to: "/welcome", replace: true }); }} className="rounded-xl border p-2" aria-label="Sign out" title="Sign out"><LogOut className="h-5 w-5" /></button>
             </div>
           </div>
@@ -81,6 +83,12 @@ function Profile() {
               <div key={l as string} className="rounded-2xl bg-muted py-3"><p className="text-xl font-extrabold">{n ?? "–"}</p><p className="text-xs text-muted-foreground">{l}</p></div>
             ))}
           </div>
+        </div>
+      </div>
+      <div className="card-surface mx-4 mt-5 flex items-center justify-between gap-3 p-4 md:mx-0">
+        <span className="font-semibold">🌐 {tr("language")}</span>
+        <div className="flex gap-1 rounded-2xl bg-muted p-1">
+          {languages.map((l) => <button key={l.code} onClick={() => setLang(l.code)} className={`rounded-xl px-3 py-1.5 text-sm font-semibold ${lang === l.code ? "bg-card shadow-card" : "text-muted-foreground"}`}>{l.label}</button>)}
         </div>
       </div>
       <div className="mx-4 mt-5 flex gap-1 rounded-2xl bg-muted p-1 md:mx-0">

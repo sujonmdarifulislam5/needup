@@ -8,6 +8,8 @@ import { type DbPostType, type FeedPost, startConversation, timeAgo, typeMeta } 
 import { useAuth } from "@/lib/auth";
 import { canOfferHelp } from "@/lib/interactions";
 import { UserAvatar, MediaImage } from "./Avatar";
+import { useT } from "@/lib/i18n";
+import { publicUrl } from "@/lib/native";
 
 export function TypeBadge({ type }: { type: DbPostType }) {
   const m = typeMeta[type];
@@ -53,6 +55,8 @@ export function PostCard({ post, full }: { post: FeedPost; full?: boolean }) {
   const [likes, setLikes] = useState(post.post_likes.length);
   const { message, canHelp, busy, isOwn } = usePostActions(post);
   const comments = post.comments[0]?.count ?? 0;
+  const { t } = useT();
+  const [expanded, setExpanded] = useState(false);
 
   const toggleLike = async () => {
     if (!user) { toast("Please sign in to like posts"); nav({ to: "/auth" }); return; }
@@ -66,12 +70,13 @@ export function PostCard({ post, full }: { post: FeedPost; full?: boolean }) {
   };
 
   const share = async () => {
-    const url = `${window.location.origin}/post/${post.id}`;
+    const url = publicUrl(`/post/${post.id}`);
     try {
       if (navigator.share) await navigator.share({ title: "NeedUp", text: post.content.slice(0, 80), url });
-      else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
+      else { await navigator.clipboard.writeText(url); toast.success(t("linkCopied")); }
     } catch { /* cancelled */ }
   };
+  const long = !full && (post.content.length > 300 || post.content.split("\n").length > 6);
 
   const remove = async () => {
     if (!confirm("Delete this post?")) return;
@@ -101,7 +106,12 @@ export function PostCard({ post, full }: { post: FeedPost; full?: boolean }) {
       <Link to="/post/$id" params={{ id: post.id }} className="block">
         {post.status === "closed" && <p className="px-4 pb-2 text-sm font-semibold text-muted-foreground sm:px-5">Closed</p>}
         {post.title && <p className="px-4 pb-1 text-sm font-semibold text-accent-foreground sm:px-5">{post.title}</p>}
-        <p className={`whitespace-pre-line px-4 pb-4 leading-relaxed sm:px-5 ${full ? "text-lg" : "text-[17px]"}`}>{post.content}</p>
+        <p className={`whitespace-pre-line break-words px-4 leading-relaxed sm:px-5 ${full ? "text-lg" : "text-[17px]"} ${long && !expanded ? "line-clamp-5 pb-1" : "pb-4"}`}>{post.content}</p>
+        {long && (
+          <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded((v) => !v); }} className="px-4 pb-4 text-sm font-semibold text-primary sm:px-5">
+            {expanded ? t("seeLess") : `… ${t("seeMore")}`}
+          </button>
+        )}
         {post.image_url && <MediaImage src={post.image_url} className="aspect-[5/3] w-full object-cover" />}
       </Link>
       <div className="flex items-center gap-1 border-t px-2 py-2 sm:px-3">
@@ -112,7 +122,7 @@ export function PostCard({ post, full }: { post: FeedPost; full?: boolean }) {
           <MessageCircle className="h-5 w-5" /> {comments}
         </Link>
         <button onClick={share} className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted">
-          <Share2 className="h-5 w-5" /> <span className="hidden sm:inline">Share</span>
+          <Share2 className="h-5 w-5" /> <span className="hidden sm:inline">{t("share")}</span>
         </button>
         {isOwn && (
           <button onClick={remove} className="ml-auto rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-destructive" aria-label="Delete post"><Trash2 className="h-5 w-5" /></button>

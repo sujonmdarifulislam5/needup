@@ -1,3 +1,4 @@
+import { useT, type TKey } from "@/lib/i18n";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -31,11 +32,11 @@ export function Logo({ size = "md" }: { size?: "md" | "lg" }) {
 }
 
 const nav = [
-  { to: "/", label: "Home", icon: Home },
-  { to: "/nearby", label: "Nearby", icon: MapPin },
-  { to: "/communities", label: "Communities", icon: Users },
-  { to: "/messages", label: "Messages", icon: MessageCircle },
-  { to: "/profile", label: "Profile", icon: User },
+  { to: "/", label: "home", icon: Home },
+  { to: "/nearby", label: "nearby", icon: MapPin },
+  { to: "/communities", label: "communities", icon: Users },
+  { to: "/messages", label: "messages", icon: MessageCircle },
+  { to: "/profile", label: "profile", icon: User },
 ] as const;
 
 export const createOptions = [
@@ -150,6 +151,7 @@ function RightRail() {
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const { user, profile } = useAuth();
+  const { t } = useT();
   useLiveUpdates(user?.id);
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -191,15 +193,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           <nav className="mt-8 flex flex-col gap-1">
             {nav.map((n) => (
               <Link key={n.to} to={n.to} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-[17px] font-medium transition ${active(n.to) ? "bg-primary-soft font-semibold text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
-                <n.icon className="h-6 w-6 shrink-0" /><span className="hidden lg:inline">{n.label}</span>
+                <n.icon className="h-6 w-6 shrink-0" /><span className="hidden lg:inline">{t(n.label)}</span>
               </Link>
             ))}
             <Link to="/notifications" className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-[17px] font-medium ${active("/notifications") ? "bg-primary-soft text-accent-foreground" : "text-muted-foreground hover:bg-muted"}`}>
-              <span className="relative"><Bell className="h-6 w-6 shrink-0" />{!!unread.data && <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-need px-1 text-center text-[10px] font-bold text-primary-foreground">{unread.data}</span>}</span><span className="hidden lg:inline">Notifications</span>
+              <span className="relative"><Bell className="h-6 w-6 shrink-0" />{!!unread.data && <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-need px-1 text-center text-[10px] font-bold text-primary-foreground">{unread.data}</span>}</span><span className="hidden lg:inline">{t("notifications")}</span>
             </Link>
           </nav>
           <button onClick={openCreate} className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-brand px-4 py-3.5 font-semibold text-primary-foreground shadow-lift transition hover:opacity-95 xl:hidden">
-            <Plus className="h-5 w-5" /><span className="hidden lg:inline">Create post</span>
+            <Plus className="h-5 w-5" /><span className="hidden lg:inline">{t("createPost")}</span>
           </button>
           <Button onClick={openCreate} className="mt-6 hidden h-12 w-full rounded-2xl bg-brand text-base font-semibold shadow-lift hover:opacity-95 xl:inline-flex"><Plus className="h-5 w-5" />Create Post</Button>
           {user ? (
@@ -230,10 +232,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function BottomItem({ to, label, icon: Icon, active }: { to: string; label: string; icon: typeof Home; active: boolean }) {
+function BottomItem({ to, label, icon: Icon, active }: { to: string; label: TKey; icon: typeof Home; active: boolean }) {
+  const { t } = useT();
   return (
     <Link to={to} className={`flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${active ? "text-primary" : "text-muted-foreground"}`}>
-      <Icon className="h-6 w-6" />{label}
+      <Icon className="h-6 w-6" />{t(label)}
     </Link>
   );
 }

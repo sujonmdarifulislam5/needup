@@ -77,10 +77,10 @@ function AuthPage() {
           <button key={m} onClick={() => { setMode(m); setError(null); }} className={`flex-1 rounded-xl py-2.5 text-sm font-semibold ${mode === m ? "bg-card shadow-card" : "text-muted-foreground"}`}>{m === "login" ? "Sign in" : "Create account"}</button>
         ))}
       </div>
-      <form onSubmit={submit} className="space-y-4">
-        {mode === "signup" && <Field label="Full name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} autoComplete="name" />}
-        <Field label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
-        <Field label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={mode === "signup" ? 8 : undefined} autoComplete={mode === "signup" ? "new-password" : "current-password"} />
+      <form onSubmit={submit} className="space-y-4" method="post" action="/auth" autoComplete="on">
+        {mode === "signup" && <Field label="Full name" name="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} autoComplete="name" />}
+        <Field label="Email" name="email" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username email" />
+        <Field label="Password" name="password" id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={mode === "signup" ? 8 : undefined} autoComplete={mode === "signup" ? "new-password" : "current-password"} />
         {mode === "signup" && <p className="text-sm text-muted-foreground">You can add a profile photo right after you sign up.</p>}
         {error && <p className="rounded-xl bg-need-soft px-4 py-3 text-sm font-medium text-need">{error}</p>}
         <button disabled={busy} className={primaryBtn}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}</button>

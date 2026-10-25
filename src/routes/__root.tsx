@@ -16,6 +16,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth";
 import { AppShell } from "@/components/needup/AppShell";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { LangProvider } from "@/lib/i18n";
+import { setupBackButton } from "@/lib/native";
 
 function NotFoundComponent() {
   return (
@@ -122,14 +124,23 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    let cleanup = () => {};
+    void setupBackButton(() => router.history.back(), () => ["/", "/welcome"].includes(router.state.location.pathname)).then((c) => { cleanup = c; });
+    return () => cleanup();
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <AuthProvider>
-        {["/welcome", "/auth", "/forgot-password", "/reset-password", "/onboarding"].includes(path) ? <Outlet /> : <AppShell><Outlet /></AppShell>}
-      </AuthProvider>
+      <LangProvider>
+        <AuthProvider>
+          {["/welcome", "/auth", "/forgot-password", "/reset-password", "/onboarding"].includes(path) ? <Outlet /> : <AppShell><Outlet /></AppShell>}
+        </AuthProvider>
+      </LangProvider>
       <Toaster position="top-center" />
     </QueryClientProvider>
   );

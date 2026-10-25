@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -43,6 +43,14 @@ function Notifications() {
       return data as unknown as N[];
     },
   });
+  // Opening this page counts as reading: clear the red badge (dots stay until you leave so you can see what's new).
+  const hasUnread = !!q.data?.some((n) => !n.is_read);
+  useEffect(() => {
+    if (!user || !hasUnread) return;
+    void supabase.from("notifications").update({ is_read: true }).eq("is_read", false).eq("user_id", user.id)
+      .then(({ error }) => { if (!error) void qc.invalidateQueries({ queryKey: ["notif-unread"] }); });
+    return () => { void qc.invalidateQueries({ queryKey: ["notifications"] }); };
+  }, [user, hasUnread, qc]);
   const markAll = async () => {
     if (!user || marking) return;
     setMarking(true);
