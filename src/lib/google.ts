@@ -1,11 +1,16 @@
 import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
+import { isNative, nativeGoogleSignIn } from "@/lib/native";
 
 // Lovable's own backend uses the managed Google login; your own backend uses its Google provider directly.
 const LOVABLE_REF = "jgkosnkfydxdaehoqgwt";
 
 export async function googleSignIn() {
+  if (await isNative()) {
+    try { await nativeGoogleSignIn(); } catch { toast.error("Google sign-in isn't set up yet. Please use email for now."); }
+    return;
+  }
   const url = (import.meta.env["VITE_SUPABASE_URL"] as string | undefined) ?? "";
   if (url.includes(LOVABLE_REF)) {
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });

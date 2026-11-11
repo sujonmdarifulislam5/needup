@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { canOfferHelp } from "@/lib/interactions";
 import { UserAvatar, MediaImage } from "./Avatar";
 import { useT } from "@/lib/i18n";
-import { publicUrl } from "@/lib/native";
+import { publicUrl, sharePost } from "@/lib/native";
 
 export function TypeBadge({ type }: { type: DbPostType }) {
   const m = typeMeta[type];
@@ -72,8 +72,7 @@ export function PostCard({ post, full }: { post: FeedPost; full?: boolean }) {
   const share = async () => {
     const url = publicUrl(`/post/${post.id}`);
     try {
-      if (navigator.share) await navigator.share({ title: "NeedUp", text: post.content.slice(0, 80), url });
-      else { await navigator.clipboard.writeText(url); toast.success(t("linkCopied")); }
+      if (!(await sharePost({ title: "NeedUp", text: post.content.slice(0, 80), url }))) { await navigator.clipboard.writeText(url); toast.success(t("linkCopied")); }
     } catch { /* cancelled */ }
   };
   const long = !full && (post.content.length > 300 || post.content.split("\n").length > 6);

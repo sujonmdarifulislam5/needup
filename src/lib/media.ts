@@ -21,7 +21,24 @@ export function useMediaUrl(ref: string | null | undefined) {
   return ref.startsWith("http") ? ref : (data ?? null);
 }
 
-export async function uploadImage(bucket: Bucket, userId: string, file: File): Promise<string> {
+/** Shrink big phone photos (to max 1600px, JPEG) before upload so posting is fast on mobile data. */
+async function compress(file: File, maxSide = 1600): Promise<File> {
+  if (file.type === "image/gif" || file.size < 400 * 1024) return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bmp.width * scale); canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext("2d")!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.8));
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+  } catch { return file; }
+}
+
+export async function uploadImage(bucket: Bucket, userId: string, original: File): Promise<string> {
+  if (!OK.includes(original.type)) throw new Error("Please choose a JPG, PNG, WEBP or GIF image.");
+  const file = await compress(original, bucket === "avatars" ? 800 : 1600);
   if (!OK.includes(file.type)) throw new Error("Please choose a JPG, PNG, WEBP or GIF image.");
   if (file.size > MAX[bucket]) throw new Error(`Image is too large (max ${MAX[bucket] / 1024 / 1024} MB).`);
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z]/g, "") || "jpg";

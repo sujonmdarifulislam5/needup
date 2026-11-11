@@ -1,5 +1,6 @@
 import { languages, useT } from "@/lib/i18n";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { LogOut, MapPin, Pencil, X } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -90,6 +91,16 @@ function Profile() {
         <div className="flex gap-1 rounded-2xl bg-muted p-1">
           {languages.map((l) => <button key={l.code} onClick={() => setLang(l.code)} className={`rounded-xl px-3 py-1.5 text-sm font-semibold ${lang === l.code ? "bg-card shadow-card" : "text-muted-foreground"}`}>{l.label}</button>)}
         </div>
+      </div>
+      <div className="card-surface mx-4 mt-3 flex items-center justify-between gap-3 p-4 text-sm md:mx-0">
+        <Link to="/privacy" className="font-semibold text-primary">🔒 Privacy Policy</Link>
+        <button onClick={async () => {
+          if (!confirm("Delete your NeedUp account permanently? All your posts, comments and messages will be removed.")) return;
+          if (prompt('Type DELETE to confirm') !== "DELETE") return;
+          const { error } = await supabase.rpc("delete_my_account" as never);
+          if (error) { toast.error("Couldn't delete your account. Please try again."); return; }
+          await signOut(); toast.success("Your account was deleted"); nav({ to: "/welcome", replace: true });
+        }} className="font-semibold text-need">Delete account</button>
       </div>
       <div className="mx-4 mt-5 flex gap-1 rounded-2xl bg-muted p-1 md:mx-0">
         {tabs.map((x) => <button key={x.v} onClick={() => setT(x.v)} className={`flex-1 rounded-xl py-2.5 text-sm font-semibold ${t === x.v ? "bg-card shadow-card" : "text-muted-foreground"}`}>{x.label}</button>)}

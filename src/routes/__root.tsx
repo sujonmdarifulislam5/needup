@@ -17,7 +17,7 @@ import { AuthProvider } from "@/lib/auth";
 import { AppShell } from "@/components/needup/AppShell";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LangProvider } from "@/lib/i18n";
-import { setupBackButton } from "@/lib/native";
+import { setupAuthDeepLink, setupBackButton, setupNativeChrome } from "@/lib/native";
 
 function NotFoundComponent() {
   return (
@@ -83,7 +83,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#0f766e" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "NeedUp — People helping people" },
       { name: "description", content: "NeedUp is a local community network to share what you need and how you can help." },
       { property: "og:title", content: "NeedUp — People helping people" },
@@ -99,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
     ],
   }),
   shellComponent: RootShell,
@@ -130,7 +131,11 @@ function RootComponent() {
   useEffect(() => {
     let cleanup = () => {};
     void setupBackButton(() => router.history.back(), () => ["/", "/welcome"].includes(router.state.location.pathname)).then((c) => { cleanup = c; });
-    return () => cleanup();
+    let cleanupLink = () => {};
+    void setupAuthDeepLink(() => router.navigate({ to: "/", replace: true })).then((c) => { cleanupLink = c; });
+    let cleanupChrome = () => {};
+    void setupNativeChrome().then((c) => { cleanupChrome = c; });
+    return () => { cleanup(); cleanupLink(); cleanupChrome(); };
   }, [router]);
 
   return (

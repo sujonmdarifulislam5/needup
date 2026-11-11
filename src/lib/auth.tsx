@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { Session, User } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { backupNativeSession, restoreNativeSession } from "@/lib/native";
 
 export type Profile = {
   id: string;
@@ -43,11 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
+      if (event !== "INITIAL_SESSION") void backupNativeSession(s);
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
         setTimeout(() => { void loadProfile(s?.user.id); qc.invalidateQueries(); }, 0);
       }
     });
-    supabase.auth.getSession().then(async ({ data }) => {
+    restoreNativeSession().catch(() => {}).then(() => supabase.auth.getSession()).then(async ({ data }) => {
       setSession(data.session);
       await loadProfile(data.session?.user.id);
       setReady(true);
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await qc.cancelQueries();
       qc.clear();
       await supabase.auth.signOut();
+      await backupNativeSession(null).catch(() => {});
     },
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

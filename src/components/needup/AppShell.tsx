@@ -10,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserAvatar } from "./Avatar";
 import { useLiveUpdates } from "@/lib/live";
 import { Button } from "@/components/ui/button";
+import logoImg from "@/assets/needup-logo-sm.png";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRef, type TouchEvent } from "react";
 
 export function useMyCommunity() {
   const { profile } = useAuth();
@@ -25,7 +28,7 @@ export const useOpenCreate = () => useContext(CreateCtx);
 export function Logo({ size = "md" }: { size?: "md" | "lg" }) {
   return (
     <Link to="/" className="flex items-center gap-2">
-      <span className={`grid place-items-center rounded-xl bg-brand font-extrabold text-primary-foreground ${size === "lg" ? "h-14 w-14 text-2xl" : "h-9 w-9 text-lg"}`}>N</span>
+      <img src={logoImg} alt="NeedUp logo" width={256} height={256} className={size === "lg" ? "h-14 w-14" : "h-9 w-9"} />
       <span className={`font-extrabold tracking-tight ${size === "lg" ? "text-3xl" : "text-xl"}`}>Need<span className="text-primary">Up</span></span>
     </Link>
   );
@@ -170,12 +173,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       return count ?? 0;
     },
   });
+  const inChat = /^\/messages\/[^/]+/.test(path);
+  const qcl = useQueryClient();
+  const pull = useRef<{ y: number; d: number } | null>(null);
+  const [pullD, setPullD] = useState(0);
+  const onTouchStart = (e: TouchEvent) => { pull.current = window.scrollY <= 0 ? { y: e.touches[0]!.clientY, d: 0 } : null; };
+  const onTouchMove = (e: TouchEvent) => { if (!pull.current) return; const d = Math.min(100, Math.max(0, e.touches[0]!.clientY - pull.current.y)); pull.current.d = d; setPullD(d); };
+  const onTouchEnd = () => { if (pull.current && pull.current.d > 70) void qcl.invalidateQueries(); pull.current = null; setPullD(0); };
   const openCreate = () => (user ? setOpen(true) : navigate({ to: "/auth" }));
 
   return (
     <CreateCtx.Provider value={openCreate}>
       {/* mobile header */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-card/90 px-4 py-3 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-30 border-b-0 bg-transparent md:hidden" hidden={inChat} aria-hidden={inChat || undefined} style={inChat ? { display: "none" } : undefined}><div className="flex items-center justify-between border-b bg-card/90 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] backdrop-blur md:hidden">
         <Logo />
         <div className="flex items-center gap-1">
           <Link to="/search" className="rounded-full p-2.5 hover:bg-muted" aria-label="Search"><Search className="h-5 w-5" /></Link>
@@ -183,13 +193,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           {user ? <Link to="/profile" className="ml-1"><UserAvatar src={profile?.avatar_url} name={profile?.full_name} className="h-8 w-8" /></Link>
             : <Link to="/auth" className="ml-1 rounded-xl bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground">Sign in</Link>}
         </div>
-      </header>
+      </div></header>
 
       <div className="mx-auto flex max-w-[1320px] gap-6 md:px-4 lg:px-6 xl:max-w-[1296px]">
         {/* sidebar */}
         <aside aria-label="Navigation" className="sticky top-0 hidden h-screen w-20 shrink-0 flex-col py-6 md:flex lg:w-64 xl:w-[240px] xl:py-0">
           <div className="flex h-full min-h-0 flex-col xl:fixed xl:inset-y-0 xl:w-[240px] xl:overflow-y-auto xl:py-6 xl:pr-4">
-          <div className="px-3 lg:px-2"><span className="lg:hidden"><Link to="/" className="grid h-10 w-10 place-items-center rounded-xl bg-brand text-lg font-extrabold text-primary-foreground">N</Link></span><span className="hidden lg:block"><Logo /></span></div>
+          <div className="px-3 lg:px-2"><span className="lg:hidden"><Link to="/" className="block h-10 w-10"><img src={logoImg} alt="NeedUp logo" width={256} height={256} className="h-10 w-10" /></Link></span><span className="hidden lg:block"><Logo /></span></div>
           <nav className="mt-8 flex flex-col gap-1">
             {nav.map((n) => (
               <Link key={n.to} to={n.to} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-[17px] font-medium transition ${active(n.to) ? "bg-primary-soft font-semibold text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
@@ -215,14 +225,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 pb-28 md:py-6 md:pb-10">
+        <main className="min-w-0 flex-1 pb-28 md:py-6 md:pb-10" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+          {pullD > 0 && <div className="flex justify-center py-2 text-xs font-semibold text-primary md:hidden" style={{ height: pullD / 2 }}>{pullD > 70 ? "↻ Release to refresh" : "↓ Pull to refresh"}</div>}
           <div className="mx-auto w-full max-w-2xl xl:max-w-[680px]">{children}</div>
         </main>
         <RightRail />
       </div>
 
       {/* bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 items-center border-t bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav className={`fixed inset-x-0 bottom-0 z-40 grid-cols-5 items-center border-t bg-card/95 px-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden [.kb-open_&]:hidden ${inChat ? "hidden" : "grid"}`}>
         {[nav[0], nav[1]].map((n) => <BottomItem key={n.to} {...n} active={active(n.to)} />)}
         <button onClick={openCreate} className="mx-auto -mt-6 grid h-14 w-14 place-items-center rounded-full bg-brand text-primary-foreground shadow-lift" aria-label="Create"><Plus className="h-7 w-7" /></button>
         {[nav[3], nav[4]].map((n) => <BottomItem key={n.to} {...n} active={active(n.to)} />)}

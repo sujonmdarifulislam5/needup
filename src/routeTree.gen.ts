@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CommunitiesRouteImport } from './routes/communities'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as NearbyRouteImport } from './routes/nearby'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as WelcomeRouteImport } from './routes/welcome'
@@ -57,6 +58,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const NearbyRoute = NearbyRouteImport.update({
   id: '/nearby',
   path: '/nearby',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/communities': typeof CommunitiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/nearby': typeof NearbyRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/welcome': typeof WelcomeRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/communities': typeof CommunitiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/nearby': typeof NearbyRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/welcome': typeof WelcomeRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/communities': typeof CommunitiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/nearby': typeof NearbyRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/welcome': typeof WelcomeRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/communities'
     | '/forgot-password'
     | '/nearby'
+    | '/privacy'
     | '/reset-password'
     | '/search'
     | '/welcome'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/communities'
     | '/forgot-password'
     | '/nearby'
+    | '/privacy'
     | '/reset-password'
     | '/search'
     | '/welcome'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/communities'
     | '/forgot-password'
     | '/nearby'
+    | '/privacy'
     | '/reset-password'
     | '/search'
     | '/welcome'
@@ -269,6 +281,7 @@ export interface RootRouteChildren {
   CommunitiesRoute: typeof CommunitiesRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   NearbyRoute: typeof NearbyRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -317,6 +330,13 @@ declare module '@tanstack/react-router' {
       path: '/nearby'
       fullPath: '/nearby'
       preLoaderRoute: typeof NearbyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -467,6 +487,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunitiesRoute: CommunitiesRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   NearbyRoute: NearbyRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   WelcomeRoute: WelcomeRoute,

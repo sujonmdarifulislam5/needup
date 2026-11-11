@@ -12,7 +12,7 @@ export function AuthLayout({ title, sub, children }: { title: string; sub?: stri
           <p className="text-4xl font-extrabold leading-tight">Ask. Offer. Connect.<br />Right in your neighborhood.</p>
         </div>
       </div>
-      <div className="flex flex-col items-center justify-center px-6 py-12">
+      <div className="flex flex-col items-center justify-center px-6 py-12 pt-[calc(3rem+env(safe-area-inset-top,0px))]">
         <div className="w-full max-w-sm">
           <div className="flex justify-center"><Logo size="lg" /></div>
           <h1 className="mt-8 text-center text-3xl font-extrabold tracking-tight">{title}</h1>

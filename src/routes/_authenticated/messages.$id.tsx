@@ -74,6 +74,12 @@ function Chat() {
       .then(() => qc.invalidateQueries({ queryKey: ["conversations"] }));
   }, [msgs.data, id, user, qc]);
 
+  useEffect(() => {
+    const onKb = () => bottom.current?.scrollIntoView({ block: "end" });
+    window.visualViewport?.addEventListener("resize", onKb);
+    return () => window.visualViewport?.removeEventListener("resize", onKb);
+  }, []);
+
   const send = async () => {
     const t = text.trim();
     if (!t || !user || sending) return;
@@ -88,7 +94,7 @@ function Chat() {
   const fmt = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
   return (
-    <div className="flex h-[calc(100dvh-8.5rem)] flex-col md:card-surface md:h-[calc(100dvh-3rem)] md:overflow-hidden">
+    <div className="fixed inset-x-0 top-0 z-50 flex flex-col bg-background pt-[env(safe-area-inset-top,0px)] [bottom:var(--kb,0px)] md:static md:z-auto md:h-[calc(100dvh-3rem)] md:pt-0 md:card-surface md:overflow-hidden">
       <div className="flex items-center gap-3 border-b bg-card px-4 py-3">
         <Link to="/messages" className="rounded-full p-1.5 hover:bg-muted" aria-label="Back"><ArrowLeft className="h-5 w-5" /></Link>
         <UserAvatar src={other.data?.avatar_url} name={other.data?.full_name} className="h-10 w-10" />
@@ -110,7 +116,7 @@ function Chat() {
         })}
         <div ref={bottom} />
       </div>
-      <div className="flex items-center gap-2 border-t bg-card p-3">
+      <div className="flex items-center gap-2 border-t bg-card p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:pb-3">
         <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} maxLength={4000} placeholder="Type a message…" className="min-w-0 flex-1 rounded-full border bg-muted/50 px-4 py-2.5 outline-none focus:border-primary" />
         <Button onClick={send} disabled={sending || !text.trim() || other.isLoading || other.isError || !other.data} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-primary-foreground disabled:opacity-50" aria-label="Send"><Send className="h-5 w-5" /></Button>
       </div>

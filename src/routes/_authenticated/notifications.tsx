@@ -61,11 +61,12 @@ function Notifications() {
     qc.invalidateQueries({ queryKey: ["notif-unread"] });
   };
   const open = (n: N) => {
-    if (!n.is_read) void supabase.from("notifications").update({ is_read: true }).eq("id", n.id).then(({ error }) => {
-      if (error) { toast.error("Could not mark notification read."); return; }
-      void qc.invalidateQueries({ queryKey: ["notifications"] });
-      void qc.invalidateQueries({ queryKey: ["notif-unread"] });
-    });
+    if (n.is_read || !user) return;
+    // Show it as read right away; save quietly in the background (retry once).
+    qc.setQueryData<N[]>(["notifications", user.id], (old) => old?.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
+    qc.setQueryData<number>(["notif-unread", user.id], (c) => Math.max(0, (c ?? 1) - 1));
+    const save = () => supabase.from("notifications").update({ is_read: true }).eq("id", n.id).eq("user_id", user.id);
+    void save().then(({ error }) => (error ? save() : null)).then(() => { void qc.invalidateQueries({ queryKey: ["notif-unread"] }); });
   };
 
   return (

@@ -119,7 +119,7 @@ function PostBody({ post }: { post: FeedPost }) {
         {user ? (
           <div className="mt-5 flex items-center gap-2">
             <UserAvatar src={profile?.avatar_url} name={profile?.full_name} className="h-9 w-9" />
-            <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} maxLength={2000} placeholder="Write a comment…" className="min-w-0 flex-1 rounded-full border bg-muted/50 px-4 py-2.5 outline-none focus:border-primary" />
+            <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} maxLength={2000} onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 300); }} placeholder="Write a comment…" className="min-w-0 flex-1 rounded-full border bg-muted/50 px-4 py-2.5 outline-none focus:border-primary" />
             <button disabled={sending || !text.trim()} onClick={add} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground disabled:opacity-50" aria-label="Send"><Send className="h-4 w-4" /></button>
           </div>
         ) : (
